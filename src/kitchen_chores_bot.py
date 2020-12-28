@@ -1,4 +1,8 @@
 import util
 
+import discord
+from discord.ext.commands import Bot
 
-util.load_env()
+
+COMMAND_PREFIX = '!'
+bot = Bot(COMMAND_PREFIX)
