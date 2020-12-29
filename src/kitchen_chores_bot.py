@@ -1,23 +1,44 @@
 import datetime
+import logging
 import os
-from discord import guild
+import sys
 
-from discord.flags import Intents
 import util
 
 import discord
 from discord.ext.commands import Bot
+from discord.flags import Intents
 
 
 COMMAND_PREFIX = '!'
-_guild = None
-_role = None
-_users = []
-
 
 intents = discord.Intents.default()
 intents.members = True
 bot = Bot(COMMAND_PREFIX, intents=intents)
+
+
+logger = logging.getLogger('discord')
+logger.setLevel(logging.INFO)
+formatter = logging.Formatter(
+  '[%(levelname)s] {%(funcName)s | %(filename)s} %(asctime)s:  %(message)s')
+
+file_handler = logging.FileHandler(
+  filename=util.get_logs_folder() / 'kitchen-chores-bot-{}.log'.format(
+    datetime.datetime.now()),
+  encoding='utf-8', mode='w')
+file_handler.setFormatter(formatter)
+file_handler.setLevel(logging.DEBUG)
+logger.addHandler(file_handler)
+
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+console_handler.setLevel(logging.WARNING)
+logger.addHandler(console_handler)
+
+
+_guild = None
+_role = None
+_users = []
 
 
 @bot.event
@@ -35,26 +56,29 @@ async def on_ready():
     if _role in member.roles and bot_role not in member.roles:
       _users.append(member)
 
-  print("""
-            ██████╗██████╗███╗   ███╗██████╗███╗   ████████╗              
-            ██╔═══████╔══██████╗ ██████╔═══██████╗  ████╔══██╗             
-            ██║   ████████╔██╔████╔████║   ████╔██╗ ████║  ██║             
-            ██║   ████╔══████║╚██╔╝████║   ████║╚██╗████║  ██║             
-            ╚██████╔██║  ████║ ╚═╝ ██╚██████╔██║ ╚██████████╔╝             
-            ╚═════╝╚═╝  ╚═╚═╝     ╚═╝╚═════╝╚═╝  ╚═══╚═════╝              
-                                                                          
-    ████████╗  ██╗██████╗██████╗███████╗        ███╗   ███╗██████╗██████╗ 
-    ██╔════██║  ████╔═══████╔══████╔════╝        ████╗ ██████╔════╝██╔══██╗
-    ██║    █████████║   ████████╔█████╗          ██╔████╔████║  █████████╔╝
-    ██║    ██╔══████║   ████╔══████╔══╝          ██║╚██╔╝████║   ████╔══██╗
-    ╚████████║  ██╚██████╔██║  █████████╗        ██║ ╚═╝ ██╚██████╔██║  ██║
-    ╚═════╚═╝  ╚═╝╚═════╝╚═╝  ╚═╚══════╝        ╚═╝     ╚═╝╚═════╝╚═╝  ╚═╝
-    """)
-  print('Registered Users:')
-  for u in _users:
-    print(u.nick)
+  server_str = """
 
-  print('Now serving')
+        ██████╗██████╗███╗   ███╗██████╗███╗   ████████╗              
+        ██╔═══████╔══██████╗ ██████╔═══██████╗  ████╔══██╗             
+        ██║   ████████╔██╔████╔████║   ████╔██╗ ████║  ██║             
+        ██║   ████╔══████║╚██╔╝████║   ████║╚██╗████║  ██║             
+        ╚██████╔██║  ████║ ╚═╝ ██╚██████╔██║ ╚██████████╔╝             
+        ╚═════╝╚═╝  ╚═╚═╝     ╚═╝╚═════╝╚═╝  ╚═══╚═════╝              
+                                                                      
+████████╗  ██╗██████╗██████╗███████╗        ███╗   ███╗██████╗██████╗ 
+██╔════██║  ████╔═══████╔══████╔════╝        ████╗ ██████╔════╝██╔══██╗
+██║    █████████║   ████████╔█████╗          ██╔████╔████║  █████████╔╝
+██║    ██╔══████║   ████╔══████╔══╝          ██║╚██╔╝████║   ████╔══██╗
+╚████████║  ██╚██████╔██║  █████████╗        ██║ ╚═╝ ██╚██████╔██║  ██║
+╚═════╚═╝  ╚═╝╚═════╝╚═╝  ╚═╚══════╝        ╚═╝     ╚═╝╚═════╝╚═╝  ╚═╝
+
+Registered Users:
+{}
+
+Now Serving.\n""".format('\n'.join(u.nick or u.name for u in _users))
+
+  logger.info(server_str)
+  print(server_str)
 
 
 @bot.command(name='init', help='Reinitialize the bot. Refreshes all data',
