@@ -1,3 +1,11 @@
+# =================================
+# Imports
+# =================================
+import asyncio
+import discord
+from discord.ext.commands import Bot
+from discord.flags import Intents
+
 import datetime
 import logging
 import os
@@ -5,18 +13,10 @@ import sys
 
 import util
 
-import discord
-from discord.ext.commands import Bot
-from discord.flags import Intents
 
-
-COMMAND_PREFIX = '!'
-
-intents = discord.Intents.default()
-intents.members = True
-bot = Bot(COMMAND_PREFIX, intents=intents)
-
-
+# =================================
+# Logging setup
+# =================================
 logger = logging.getLogger('discord')
 logger.setLevel(logging.INFO)
 formatter = logging.Formatter(
@@ -36,11 +36,35 @@ console_handler.setLevel(logging.WARNING)
 logger.addHandler(console_handler)
 
 
+# =================================
+# Bot parameters
+# =================================
+COMMAND_PREFIX = '!'
+_START_OF_TIME = datetime.datetime(2020, 4, 20, 0, 0, 0, 0)
+
+
+# =================================
+# Algorithm DS & bot initialization
+# =================================
 _guild = None
 _role = None
 _users = []
 
+intents = discord.Intents.default()
+intents.members = True
+bot = Bot(COMMAND_PREFIX, intents=intents)
 
+
+# =================================
+# Helper Functions
+# =================================
+def get_on_call() -> int:
+  pass
+
+
+# =================================
+# Bot API functions
+# =================================
 @bot.event
 async def on_ready():
   global _guild
@@ -80,11 +104,11 @@ Now Serving.\n""".format('\n'.join(u.nick or u.name for u in _users))
   logger.info(server_str)
   print(server_str)
 
-
-@bot.command(name='init', help='Reinitialize the bot. Refreshes all data',
+  
+@bot.command(name='schedule', help='List the schedule for the seven days',
              pass_context=True)
-async def initialize(ctx):
-  role = discord.utils.get(ctx.message.server.roles, id=os.getenv('ROLE'))
+async def schedule(ctx):
+  pass
 
   
 if __name__ == '__main__':
