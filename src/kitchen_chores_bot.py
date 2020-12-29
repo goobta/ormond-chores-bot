@@ -56,14 +56,7 @@ bot = Bot(COMMAND_PREFIX, intents=intents)
 
 
 # =================================
-# Helper Functions
-# =================================
-def get_on_call() -> int:
-  pass
-
-
-# =================================
-# Bot API functions
+# Bot Commands
 # =================================
 @bot.event
 async def on_ready():
@@ -103,6 +96,12 @@ Now Serving.\n""".format('\n'.join(u.nick or u.name for u in _users))
 
   logger.info(server_str)
   print(server_str)
+
+
+@bot.command(name='today', help='Return the person who is on-call today')
+async def on_call_today(ctx):
+  return await ctx.message.channel.send(
+    '<@{}> is responsible for the kitchen tonight!'.format(_users[0].id))
 
   
 @bot.command(name='schedule', help='List the schedule for the seven days',
