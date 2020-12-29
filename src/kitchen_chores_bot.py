@@ -6,9 +6,11 @@ import discord
 from discord.ext.commands import Bot
 from discord.flags import Intents
 
+import calendar
 import datetime
 import logging
 import os
+import pytablewriter
 import sys
 
 import util
@@ -107,7 +109,21 @@ async def on_call_today(ctx):
 @bot.command(name='schedule', help='List the schedule for the seven days',
              pass_context=True)
 async def schedule(ctx):
-  pass
+  dow = datetime.datetime.today().weekday()
+  
+  days = ['{} (today)'.format(calendar.day_abbr[dow])]
+  people = [_users[0].nick or _users[0].name]
+  for i in range(1, 7):
+    day_name = calendar.day_abbr[(dow + i) % 7]
+    days.append(day_name)
+
+    user = _users[i % len(_users)]
+    people.append(user.nick or user.name)
+
+  writer = pytablewriter.MarkdownTableWriter(
+    headers=days, value_matrix=[people])
+
+  return await ctx.message.channel.send('```{}```'.format(writer.dumps()))
 
   
 if __name__ == '__main__':
