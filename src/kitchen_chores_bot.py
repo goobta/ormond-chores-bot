@@ -106,9 +106,26 @@ async def on_call_today(ctx):
     '<@{}> is responsible for the kitchen tonight!'.format(_users[0].id))
 
   
-@bot.command(name='schedule', help='List the schedule for the seven days',
-             pass_context=True)
+@bot.command(name='schedule', help='List the schedule for the seven days')
 async def schedule(ctx):
+  return await ctx.message.channel.send('```{}```'.format(generate_schedule()))
+
+
+@bot.command(name='swap', help='Swap on call position with chosen person')
+async def swap(ctx, member: discord.Member):
+  author_id = _users.index(ctx.message.author)
+  swapee_id = _users.index(member)
+
+  _users[swapee_id] = _users[author_id]
+  _users[author_id] = member
+  
+  await ctx.message.channel.send('Users have been switched! The new schedule '
+                                 'should be as follows:')
+  await ctx.message.channel.send('```{}```'.format(generate_schedule()))
+
+  
+def generate_schedule() -> str:
+  """Generate a markdown table of the next 7 days' schedule. """
   dow = datetime.datetime.today().weekday()
   
   days = ['{} (today)'.format(calendar.day_abbr[dow])]
@@ -123,7 +140,7 @@ async def schedule(ctx):
   writer = pytablewriter.MarkdownTableWriter(
     headers=days, value_matrix=[people])
 
-  return await ctx.message.channel.send('```{}```'.format(writer.dumps()))
+  return writer.dumps()
 
   
 if __name__ == '__main__':
