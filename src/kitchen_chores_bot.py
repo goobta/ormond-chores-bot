@@ -1,12 +1,12 @@
 # =================================
 # Imports
 # =================================
-import asyncio
-import discord
 from discord.ext import commands
 from discord.ext import tasks
 from discord.flags import Intents
 
+import asyncio
+import discord
 import calendar
 import datetime
 import logging
@@ -44,6 +44,7 @@ logger.addHandler(console_handler)
 # =================================
 COMMAND_PREFIX = '!'
 RESET_TIME = datetime.time(4, 20, 0, 0)
+NOTIFICATION_START = datetime.time(21, 30, 0, 0)
 NOTIFICATION_FREQUENCY = {'minutes': 30.0}
 
 
@@ -52,6 +53,7 @@ NOTIFICATION_FREQUENCY = {'minutes': 30.0}
 # =================================
 _guild = None
 _role = None
+_channel = None
 _users = []
 _signed_off = False
 
@@ -67,9 +69,12 @@ bot = commands.Bot(COMMAND_PREFIX, intents=intents)
 async def on_ready():
   global _guild
   global _role
+  global _channel
   global _users
 
   _guild = next(filter(lambda g: g.id == int(os.getenv('GUILD')), bot.guilds))
+  _channel = next(filter(lambda c: c.id == int(os.getenv('CHANNEL')), 
+                      _guild.channels))
   _role = next(filter(lambda r: r.id == int(os.getenv('ROLE')), _guild.roles))
   bot_role = next(filter(lambda r: r.name == 'bot', _guild.roles))
 
@@ -100,8 +105,8 @@ Registered Users:
 Configured to notify every {} {}.
 
 Now Serving.\n""".format('\n'.join(u.nick or u.name for u in _users),
-                         list(NOTIFICATION_FREQUENCY.keys())[0],
-                         list(NOTIFICATION_FREQUENCY.items())[0])
+                         list(NOTIFICATION_FREQUENCY.values())[0],
+                         list(NOTIFICATION_FREQUENCY.keys())[0])
 
   logger.info(server_str)
   print(server_str)
@@ -143,6 +148,30 @@ async def signoff(ctx, member: discord.Member):
   
   return await ctx.message.channel.send(
     '<@{}> has been signed off for tonight!'.format(member.nick or member.name))
+
+
+@tasks.loop(**NOTIFICATION_FREQUENCY)
+async def notify():
+  global _signed_off
+  curr_time = datetime.datetime.now().time()
+
+  if not _signed_off and (curr_time >= NOTIFICATION_START or \
+     (curr_time <= RESET_TIME)):
+    await _channel.send('Chore whore reminder: <@{}> is responsible for '
+                        'the kitchen tonight!'.format(_users[0]))
+  elif _signed_off and curr_time >= RESET_TIME:
+    _signed_off = False
+
+
+@notify.before_loop
+async def notifications_init():
+  """Sleep so that the notifications start on the hour."""
+  next_hour = datetime.datetime.now()
+  next_hour = next_hour.replace(
+    minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
+
+  delta = next_hour - datetime.datetime.now()
+  await asyncio.sleep(delta.total_seconds())
 
   
 def generate_schedule() -> str:
