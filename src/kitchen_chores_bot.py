@@ -42,7 +42,7 @@ logger.addHandler(console_handler)
 # Bot parameters
 # =================================
 COMMAND_PREFIX = '!'
-_START_OF_TIME = datetime.datetime(2020, 4, 20, 0, 0, 0, 0)
+RESET_TIME = datetime.time(4, 20, 0, 0)
 
 
 # =================================
@@ -51,6 +51,7 @@ _START_OF_TIME = datetime.datetime(2020, 4, 20, 0, 0, 0, 0)
 _guild = None
 _role = None
 _users = []
+_signed_off = False
 
 intents = discord.Intents.default()
 intents.members = True
@@ -124,14 +125,35 @@ async def swap(ctx, member: discord.Member):
   await ctx.message.channel.send('```{}```'.format(generate_schedule()))
 
   
+@bot.command(name='signoff', help='Sign off the specified member for today')
+async def signoff(ctx, member: discord.Member):
+  if member != _users[0]:
+    return await ctx.message.channel.send(
+      'The only person who can be signed off is the one actively on duty. '
+      'Currently, that is {}.'.format(_users[0].nick or _users[0].name))
+
+  _users.append(_users.pop(0))
+  _signed_off = True
+  
+  return await ctx.message.channel.send(
+    '<@{}> has been signed off for tonight!'.format(member.nick or member.name))
+
+  
 def generate_schedule() -> str:
-  """Generate a markdown table of the next 7 days' schedule. """
+  """Generate a markdown table of the next 7 days' schedule."""
   dow = datetime.datetime.today().weekday()
   
-  days = ['{} (today)'.format(calendar.day_abbr[dow])]
+  if not _signed_off:
+    days = ['{} (today)'.format(calendar.day_abbr[dow])]
+  else:
+    days = ['{} (tmrw)'.format(calendar.day_abbr[dow + 1])]
   people = [_users[0].nick or _users[0].name]
+
   for i in range(1, 7):
-    day_name = calendar.day_abbr[(dow + i) % 7]
+    if not _signed_off:
+      day_name = calendar.day_abbr[(dow + i) % 7]
+    else:
+      day_name = calendar.day_abbr[(dow + i + 1) % 7]
     days.append(day_name)
 
     user = _users[i % len(_users)]
