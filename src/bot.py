@@ -3,16 +3,12 @@
 # =================================
 from discord.ext import commands
 from discord.ext import tasks
-from discord.flags import Intents
 
 import asyncio
 import discord
-import calendar
 import datetime
 import logging
 import os
-import pytablewriter
-import sys
 
 import scheduler
 import util
@@ -109,7 +105,7 @@ async def on_call_today(ctx):
   
 @bot.command(name='schedule', help='List the schedule for the seven days')
 async def schedule(ctx):
-  await ctx.message.channel.send('```{}```'.format(generate_schedule()))
+  await ctx.message.channel.send('```{}```'.format(sch.generate_schedule()))
 
 
 @bot.command(name='swap', help='Swap on call position with chosen person')
@@ -161,32 +157,6 @@ async def notifications_init():
 
   delta = next_hour - datetime.datetime.now()
   await asyncio.sleep(delta.total_seconds())
-
-  
-def generate_schedule() -> str:
-  """Generate a markdown table of the next 7 days' schedule."""
-  dow = datetime.datetime.today().weekday()
-  
-  if not _signed_off:
-    days = ['{} (today)'.format(calendar.day_abbr[dow])]
-  else:
-    days = ['{} (tmrw)'.format(calendar.day_abbr[dow + 1])]
-  people = [_users[0].nick or _users[0].name]
-
-  for i in range(1, 7):
-    if not _signed_off:
-      day_name = calendar.day_abbr[(dow + i) % 7]
-    else:
-      day_name = calendar.day_abbr[(dow + i + 1) % 7]
-    days.append(day_name)
-
-    user = _users[i % len(_users)]
-    people.append(user.nick or user.name)
-
-  writer = pytablewriter.MarkdownTableWriter(
-    headers=days, value_matrix=[people])
-
-  return writer.dumps()
 
   
 if __name__ == '__main__':

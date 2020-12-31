@@ -1,5 +1,9 @@
+import discord
 import dotenv
 import pathlib
+
+
+discord_name = lambda m: m.nick or m.name
 
 
 def load_env():

@@ -1,8 +1,12 @@
-from typing import List
+from typing import List, Text, Tuple
 
+import calendar
 import datetime
 import discord
 import logging
+import pytablewriter
+
+import util
 
 
 class Scheduler:
@@ -21,3 +25,27 @@ class Scheduler:
   @property
   def on_call(self) -> discord.Member:
     return self._users[0]
+
+  def generate_schedule(self) -> Text:
+    dow = datetime.datetime.today().weekday()
+
+    if not self.signed_off:
+      days = ['{} (today)'.format(calendar.day_abbr[dow])]
+    else:
+      days = ['{} (tmrw)'.format(calendar.day_abbr[dow + 1])]
+    people = [util.discord_name(self._users[0])]
+
+    for i in range(1, 7):
+      if not self._signed_off:
+        day_name = calendar.day_abbr[(dow + i) % 7]
+      else:
+        day_name = calendar.day_abbr[(dow + i + 1) % 7]
+      days.append(day_name)
+
+      user = self._users[i % len(self._users)]
+      people.append(user.nick or user.name)
+
+    writer = pytablewriter.MarkdownTableWriter(
+      headers=days, value_matrix=[people])
+
+    return writer.dumps()
