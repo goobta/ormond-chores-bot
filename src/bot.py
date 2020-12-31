@@ -42,16 +42,15 @@ logger.addHandler(console_handler)
 # =================================
 COMMAND_PREFIX = '!'
 
+NOTIFICATION_FREQUENCY = {'minutes': 30.0}
+RESET_TIME = datetime.time(4, 20, 0, 0)
+NOTIFICATION_START = datetime.time(21, 30, 0, 0)
+
 intents = discord.Intents.default()
 intents.members = True
 bot = commands.Bot(COMMAND_PREFIX, intents=intents)
 
 sch: scheduler.Scheduler = None
-NOTIFICATION_FREQUENCY = {'minutes': 30.0}
-RESET_TIME = datetime.time(4, 20, 0, 0)
-NOTIFICATION_START = datetime.time(21, 30, 0, 0)
-
-_guild = None
 _default_channel = None
 
 
@@ -60,7 +59,7 @@ _default_channel = None
 # =================================
 @bot.event
 async def on_ready():
-  global _guild, _default_channel
+  global _default_channel
   _guild = next(filter(lambda g: g.id == int(os.getenv('GUILD')), bot.guilds))
   _default_channel = next(filter(lambda c: c.id == int(os.getenv('CHANNEL')), 
                       _guild.channels))
