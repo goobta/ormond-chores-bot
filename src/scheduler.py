@@ -17,3 +17,7 @@ class Scheduler:
     self.signed_off = False
     self._users = users
     self._logger = logging.getLogger(logger_name)
+
+  @property
+  def on_call(self) -> discord.Member:
+    return self._users[0]

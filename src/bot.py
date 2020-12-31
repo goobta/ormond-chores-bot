@@ -104,7 +104,7 @@ Now Serving.\n""".format('\n'.join(u.nick or u.name for u in users),
 @bot.command(name='today', help='Return the person who is on-call today')
 async def on_call_today(ctx):
   await ctx.message.channel.send(
-    '<@{}> is responsible for the kitchen tonight!'.format(_users[0].id))
+    '<@{}> is responsible for the kitchen tonight!'.format(sch.on_call.id))
 
   
 @bot.command(name='schedule', help='List the schedule for the seven days')
