@@ -1,3 +1,4 @@
+from dis import dis, disco
 from typing import List, Text, Tuple
 
 import calendar
@@ -49,3 +50,13 @@ class Scheduler:
       headers=days, value_matrix=[people])
 
     return writer.dumps()
+
+  def swap(self, mem1: discord.Member, mem2: discord.Member):
+    if mem1 == mem2:
+      raise ValueError('Members need to be different.')
+
+    mem1_idx = self._users.index(mem1)
+    mem2_idx = self._users.index(mem2)
+
+    self._users[mem1_idx] = mem2
+    self._users[mem2_idx] = mem1
