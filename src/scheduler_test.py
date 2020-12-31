@@ -6,7 +6,8 @@ import scheduler
 
 
 def _gen_user(name):
-  return mock.MagicMock(name=name, id=name, nick=name)
+  return mock.MagicMock(name=str(name), id=name, nick=str(name), uuid=name)
+
 
 class SchedulerTestCase(unittest.TestCase):
   @parameterized.expand([
@@ -25,7 +26,8 @@ class SchedulerTestCase(unittest.TestCase):
     sch.generate_schedule()
 
     _, kwargs = mock_writer.call_args
-    self.assertListEqual(kwargs['value_matrix'], [[1, 2, 3, 4, 1, 2, 3]])
+    self.assertListEqual(kwargs['value_matrix'], 
+                         [['1', '2', '3', '4', '1', '2', '3']])
 
   @mock.patch('pytablewriter.MarkdownTableWriter')
   def test_schedule_gen_not_signed_off(self, mock_writer):
@@ -55,6 +57,28 @@ class SchedulerTestCase(unittest.TestCase):
     _, kwargs = mock_writer.call_args
     self.assertIn('tmrw', kwargs['headers'][0])
 
+  @parameterized.expand([
+    ('size 2', [0, 1], 0, 1, [1, 0]),
+    ('size 5', [0, 1, 2, 3, 4], 1, 4, [0, 4, 2, 3, 1]),
+  ])
+  def test_swap_happy(self, name, before_users, idx1, idx2, after_users):
+    pre_users = [_gen_user(u) for u in before_users]
+    sch = scheduler.Scheduler(pre_users)
+    self.assertListEqual(sch._users, pre_users)
+
+    val1 = pre_users[idx1]
+    val2 = pre_users[idx2]
+    sch.swap(val1, val2)
+
+    self.assertListEqual([u.uuid for u in sch._users],
+                         after_users)
+
+  def test_swap_same_person(self):
+    user = _gen_user('test_user')
+    sch = scheduler.Scheduler([user])
+
+    with self.assertRaises(ValueError):
+      sch.swap(user, user)
 
 if __name__ == '__main__':
   unittest.main()
