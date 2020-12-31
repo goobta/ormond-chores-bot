@@ -99,7 +99,7 @@ Now Serving.\n""".format('\n'.join(u.nick or u.name for u in users),
                          list(NOTIFICATION_FREQUENCY.keys())[0])
 
   logger.info(server_str)
-  print(server_str)
+  print(server_str, flush=True)
   return
 
 
@@ -138,15 +138,14 @@ async def signoff(ctx):
 
   if ctx.message.author == oncall:
     await ctx.message.channel.send('You can\'t sign off yourself!')
-    logger.warn('{} tried to sign off themselves.'.format(
+    logger.warning('{} tried to sign off themselves.'.format(
       util.discord_name(ctx.message.author)))
     return
 
   sch.signoff()
   await ctx.message.channel.send(
     '<@{}> has been signed off for tonight! <@{}> is responsible for '
-    'the kitchen next.'.format(util.discord_name(oncall), 
-                               util.discord_name(sch.on_call)))
+    'the kitchen next.'.format(oncall.id, sch.id))
   return
 
 
