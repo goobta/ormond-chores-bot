@@ -9,7 +9,6 @@ import datetime
 import discord
 import logging
 import os
-import re
 
 import scheduler
 import util
