@@ -124,16 +124,18 @@ async def swap(ctx, member: discord.Member):
   
 @bot.command(name='signoff', help='Sign off the specified member for today')
 async def signoff(ctx, member: discord.Member):
-  if member != _users[0]:
+  oncall = sch.on_call
+
+  if member != oncall:
     return await ctx.message.channel.send(
       'The only person who can be signed off is the one actively on duty. '
-      'Currently, that is {}.'.format(_users[0].nick or _users[0].name))
+      'Currently, that is {}.'.format(util.discord_name(oncall)))
 
-  _users.append(_users.pop(0))
-  _signed_off = True
-  
+  sch.signoff()
   return await ctx.message.channel.send(
-    '<@{}> has been signed off for tonight!'.format(member.nick or member.name))
+    '<@{}> has been signed off for tonight! <@{}> is responsible for '
+    'the kitchen next'.format(util.discord_name(oncall), 
+                              util.discord_name(sch.on_call)))
 
 
 @tasks.loop(**NOTIFICATION_FREQUENCY)

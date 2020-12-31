@@ -60,3 +60,7 @@ class Scheduler:
 
     self._users[mem1_idx] = mem2
     self._users[mem2_idx] = mem1
+
+  def signoff(self):
+    self._users.append(self._users.pop(0))
+    self.signed_off = True
