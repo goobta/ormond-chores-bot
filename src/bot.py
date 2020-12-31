@@ -47,6 +47,11 @@ bot = commands.Bot(COMMAND_PREFIX, intents=intents)
 
 sch: scheduler.Scheduler = None
 NOTIFICATION_FREQUENCY = {'minutes': 30.0}
+RESET_TIME = datetime.time(4, 20, 0, 0)
+NOTIFICATION_START = datetime.time(21, 30, 0, 0)
+
+_guild = None
+_default_channel = None
 
 
 # =================================
@@ -54,19 +59,20 @@ NOTIFICATION_FREQUENCY = {'minutes': 30.0}
 # =================================
 @bot.event
 async def on_ready():
-  guild = next(filter(lambda g: g.id == int(os.getenv('GUILD')), bot.guilds))
-  channel = next(filter(lambda c: c.id == int(os.getenv('CHANNEL')), 
-                      guild.channels))
-  role = next(filter(lambda r: r.id == int(os.getenv('ROLE')), guild.roles))
-  bot_role = next(filter(lambda r: r.name == 'bot', guild.roles))
+  global _guild, _default_channel
+  _guild = next(filter(lambda g: g.id == int(os.getenv('GUILD')), bot.guilds))
+  _default_channel = next(filter(lambda c: c.id == int(os.getenv('CHANNEL')), 
+                      _guild.channels))
+  role = next(filter(lambda r: r.id == int(os.getenv('ROLE')), _guild.roles))
+  bot_role = next(filter(lambda r: r.name == 'bot', _guild.roles))
 
   users = []
-  for member in guild.members:
+  for member in _guild.members:
     if role in member.roles and bot_role not in member.roles:
       users.append(member)
 
   global sch
-  sch = scheduler.Scheduler(guild, channel, users)
+  sch = scheduler.Scheduler(users)
 
   server_str = """
 
@@ -140,15 +146,15 @@ async def signoff(ctx, member: discord.Member):
 
 @tasks.loop(**NOTIFICATION_FREQUENCY)
 async def notify():
-  global _signed_off
   curr_time = datetime.datetime.now().time()
 
-  if not _signed_off and (curr_time >= NOTIFICATION_START or \
+  if not sch.signed_off and (curr_time >= NOTIFICATION_START or \
      (curr_time <= RESET_TIME)):
-    await _channel.send('Chore whore reminder: <@{}> is responsible for '
-                        'the kitchen tonight!'.format(_users[0]))
-  elif _signed_off and curr_time >= RESET_TIME:
-    _signed_off = False
+    await _default_channel.send(
+      'Reminder that <@{}> is responsible for the kitchen tonight!'.format(
+        util.discord_name(sch.on_call)))
+  elif sch.signed_off and curr_time >= RESET_TIME:
+    sch.signed_off = False
 
 
 @notify.before_loop
