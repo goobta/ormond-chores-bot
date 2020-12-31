@@ -14,6 +14,7 @@ import os
 import pytablewriter
 import sys
 
+import scheduler
 import util
 
 
@@ -43,23 +44,13 @@ logger.addHandler(console_handler)
 # Bot parameters
 # =================================
 COMMAND_PREFIX = '!'
-RESET_TIME = datetime.time(4, 20, 0, 0)
-NOTIFICATION_START = datetime.time(21, 30, 0, 0)
-NOTIFICATION_FREQUENCY = {'minutes': 30.0}
-
-
-# =================================
-# Algorithm DS & bot initialization
-# =================================
-_guild = None
-_role = None
-_channel = None
-_users = []
-_signed_off = False
 
 intents = discord.Intents.default()
 intents.members = True
 bot = commands.Bot(COMMAND_PREFIX, intents=intents)
+
+sch: scheduler.Scheduler = None
+NOTIFICATION_FREQUENCY = {'minutes': 30.0}
 
 
 # =================================
@@ -67,21 +58,19 @@ bot = commands.Bot(COMMAND_PREFIX, intents=intents)
 # =================================
 @bot.event
 async def on_ready():
-  global _guild
-  global _role
-  global _channel
-  global _users
+  guild = next(filter(lambda g: g.id == int(os.getenv('GUILD')), bot.guilds))
+  channel = next(filter(lambda c: c.id == int(os.getenv('CHANNEL')), 
+                      guild.channels))
+  role = next(filter(lambda r: r.id == int(os.getenv('ROLE')), guild.roles))
+  bot_role = next(filter(lambda r: r.name == 'bot', guild.roles))
 
-  _guild = next(filter(lambda g: g.id == int(os.getenv('GUILD')), bot.guilds))
-  _channel = next(filter(lambda c: c.id == int(os.getenv('CHANNEL')), 
-                      _guild.channels))
-  _role = next(filter(lambda r: r.id == int(os.getenv('ROLE')), _guild.roles))
-  bot_role = next(filter(lambda r: r.name == 'bot', _guild.roles))
+  users = []
+  for member in guild.members:
+    if role in member.roles and bot_role not in member.roles:
+      users.append(member)
 
-  _users = []
-  for member in _guild.members:
-    if _role in member.roles and bot_role not in member.roles:
-      _users.append(member)
+  global sch
+  sch = scheduler.Scheduler(guild, channel, users)
 
   server_str = """
 
@@ -104,7 +93,7 @@ Registered Users:
 
 Configured to notify every {} {}.
 
-Now Serving.\n""".format('\n'.join(u.nick or u.name for u in _users),
+Now Serving.\n""".format('\n'.join(u.nick or u.name for u in users),
                          list(NOTIFICATION_FREQUENCY.values())[0],
                          list(NOTIFICATION_FREQUENCY.keys())[0])
 
