@@ -1,4 +1,3 @@
-from dis import dis, disco
 from typing import List, Text, Tuple
 
 import calendar
@@ -44,7 +43,7 @@ class Scheduler:
     people = [util.discord_name(self._users[0])]
 
     for i in range(1, 7):
-      if not self._signed_off:
+      if not self.signed_off:
         day_name = calendar.day_abbr[(dow + i) % 7]
       else:
         day_name = calendar.day_abbr[(dow + i + 1) % 7]
