@@ -12,15 +12,29 @@ import util
 
 class Scheduler:
   def __init__(self, users: List[discord.Member], logger_name='discord'):
+    """Create a new scheduler.
+
+    Args:
+      users (List[discord.Member]): The users to put in the system.
+      logger_name (str, optional): Logger's name. Defaults to 'discord'.
+    """
     self.signed_off = False
     self._users = users
     self._logger = logging.getLogger(logger_name)
 
   @property
   def on_call(self) -> discord.Member:
+    """Returns:
+      discord.Member: Which discord user is on call for the chores tonight
+    """
     return self._users[0]
 
   def generate_schedule(self) -> Text:
+    """Generate a markdown representation of who is on call when.
+
+    Returns:
+      Text: User forcast for next 7 days, in a markdown table.
+    """
     dow = datetime.datetime.today().weekday()
 
     if not self.signed_off:
@@ -45,6 +59,15 @@ class Scheduler:
     return writer.dumps()
 
   def swap(self, mem1: discord.Member, mem2: discord.Member):
+    """Swap two user's positions in the queue.
+
+    Args:
+      mem1 (discord.Member): First member to swap
+      mem2 (discord.Member): Second member to swap
+
+    Raises:
+      ValueError: Members are the same.
+    """
     if mem1 == mem2:
       raise ValueError('Members need to be different.')
 
@@ -55,5 +78,6 @@ class Scheduler:
     self._users[mem2_idx] = mem1
 
   def signoff(self):
+    """Signoff a user for completing their task."""
     self._users.append(self._users.pop(0))
     self.signed_off = True
