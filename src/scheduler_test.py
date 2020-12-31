@@ -80,5 +80,18 @@ class SchedulerTestCase(unittest.TestCase):
     with self.assertRaises(ValueError):
       sch.swap(user, user)
 
+  def test_signoff(self):
+    users = [_gen_user(i) for i in range(5)]
+    
+    sch = scheduler.Scheduler(users)
+
+    sch.signed_off = False
+    self.assertFalse(sch.signed_off)
+
+    sch.signoff()
+
+    self.assertTrue(sch.signed_off)
+    self.assertListEqual([u.uuid for u in sch._users], [1, 2, 3, 4, 0])
+
 if __name__ == '__main__':
   unittest.main()
