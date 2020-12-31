@@ -1,15 +1,15 @@
 # =================================
 # Imports
 # =================================
-import re
 from discord.ext import commands
 from discord.ext import tasks
 
 import asyncio
-import discord
 import datetime
+import discord
 import logging
 import os
+import re
 
 import scheduler
 import util
