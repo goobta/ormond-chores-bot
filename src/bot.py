@@ -1,6 +1,7 @@
 # =================================
 # Imports
 # =================================
+import re
 from discord.ext import commands
 from discord.ext import tasks
 
@@ -101,17 +102,20 @@ Now Serving.\n""".format('\n'.join(u.nick or u.name for u in users),
 
   logger.info(server_str)
   print(server_str)
+  return
 
 
 @bot.command(name='today', help='Return the person who is on-call today')
 async def on_call_today(ctx):
   await ctx.message.channel.send(
     '<@{}> is responsible for the kitchen tonight!'.format(sch.on_call.id))
+  return
 
   
 @bot.command(name='schedule', help='List the schedule for the seven days')
 async def schedule(ctx):
   await ctx.message.channel.send('```{}```'.format(sch.generate_schedule()))
+  return
 
 
 @bot.command(name='swap', help='Swap on call position with chosen person')
@@ -127,21 +131,25 @@ async def swap(ctx, member: discord.Member):
   except:
     await ctx.message.channel.send('There was an error when trying to swap.')
 
+  return
+
   
-@bot.command(name='signoff', help='Sign off the specified member for today')
-async def signoff(ctx, member: discord.Member):
+@bot.command(name='signoff', help='Sign off the on-call member for today')
+async def signoff(ctx):
   oncall = sch.on_call
 
-  if member != oncall:
-    return await ctx.message.channel.send(
-      'The only person who can be signed off is the one actively on duty. '
-      'Currently, that is {}.'.format(util.discord_name(oncall)))
+  if ctx.message.author == oncall:
+    await ctx.message.channel.send('You can\'t sign off yourself!')
+    logger.warn('{} tried to sign off themselves.'.format(
+      util.discord_name(ctx.message.author)))
+    return
 
   sch.signoff()
-  return await ctx.message.channel.send(
+  await ctx.message.channel.send(
     '<@{}> has been signed off for tonight! <@{}> is responsible for '
-    'the kitchen next'.format(util.discord_name(oncall), 
-                              util.discord_name(sch.on_call)))
+    'the kitchen next.'.format(util.discord_name(oncall), 
+                               util.discord_name(sch.on_call)))
+  return
 
 
 @tasks.loop(**NOTIFICATION_FREQUENCY)
@@ -155,6 +163,11 @@ async def notify():
         util.discord_name(sch.on_call)))
   elif sch.signed_off and curr_time >= RESET_TIME:
     sch.signed_off = False
+  else:
+    logger.info('Notification suppressed.')
+
+  logger.info('{} has been notified.'.format(util.discord_name(sch.on_call)))
+  return
 
 
 @notify.before_loop
@@ -165,7 +178,10 @@ async def notifications_init():
     minute=0, second=0, microsecond=0) + datetime.timedelta(hours=1)
 
   delta = next_hour - datetime.datetime.now()
+  logger.info('Sleeping {} seconds before activating notifications'.format(
+    delta.total_seconds()))
   await asyncio.sleep(delta.total_seconds())
+  return
 
   
 if __name__ == '__main__':

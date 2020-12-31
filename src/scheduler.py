@@ -77,7 +77,17 @@ class Scheduler:
     self._users[mem1_idx] = mem2
     self._users[mem2_idx] = mem1
 
+    self._logger.info('{} (id: {}) and {} (id: {}) have been swapped.'.format(
+      util.discord_name(mem1), mem1.id, util.discord_name(mem2), mem2.id))
+    self._logger.info('The user queue is now: [{}]'.format(
+      ', '.join(util.discord_name(u) for u in self._users)))
+
   def signoff(self):
     """Signoff a user for completing their task."""
     self._users.append(self._users.pop(0))
     self.signed_off = True
+
+    self._logger.info('{} (id: {}) has been signed off.'.format(
+      util.discord_name(self._users[-1]), self._users[-1].id))
+    self._logger.info('{} (id: {}) is now on call'.format(
+      util.discord_name(self.on_call), self.on_call.id))
