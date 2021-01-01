@@ -5,7 +5,8 @@
 <p align='center'>
   <i>A Discord bot that keeps track of and notifies roommate chore responsibilities.</i> 
   </br> </br>
-  <img src='https://github.com/agupta231/ormond-chores-bot/workflows/Build/badge.svg?branch=main'>
+  <img src='https://github.com/agupta231/ormond-chores-bot/workflows/Build/badge.svg?branch=main' 
+  href='https://github.com/agupta231/ormond-chores-bot/actions'>
 </p>
 
 
