@@ -138,14 +138,13 @@ async def signoff(ctx):
 
   if ctx.message.author == oncall:
     await ctx.message.channel.send('You can\'t sign off yourself!')
-    logger.warning('{} tried to sign off themselves.'.format(
-      util.discord_name(ctx.message.author)))
+    logger.warning('{} tried to sign off themselves'.format(ctx.message.author))
     return
 
   sch.signoff()
   await ctx.message.channel.send(
     '<@{}> has been signed off for tonight! <@{}> is responsible for '
-    'the kitchen next.'.format(oncall.id, sch.id))
+    'the kitchen next.'.format(oncall.id, sch.on_call.id))
   return
 
 
