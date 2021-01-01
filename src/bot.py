@@ -100,6 +100,7 @@ Now Serving.\n""".format('\n'.join(u.nick or u.name for u in users),
 
   logger.info(server_str)
   print(server_str, flush=True)
+  notify.start()
   return
 
 
