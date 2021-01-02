@@ -157,7 +157,7 @@ async def notify():
      (curr_time <= RESET_TIME)):
     await _default_channel.send(
       'Reminder that <@{}> is responsible for the kitchen tonight!'.format(
-        util.discord_name(sch.on_call)))
+        sch.on_call.id))
   elif sch.signed_off and curr_time >= RESET_TIME:
     sch.signed_off = False
   else:
