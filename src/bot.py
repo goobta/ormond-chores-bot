@@ -47,7 +47,8 @@ NOTIFICATION_START = datetime.time(21, 30, 0, 0)
 
 intents = discord.Intents.default()
 intents.members = True
-bot = commands.Bot(COMMAND_PREFIX, intents=intents)
+bot = commands.Bot(command_prefix=commands.when_mentioned_or(COMMAND_PREFIX), 
+                   intents=intents)
 
 sch: scheduler.Scheduler = None
 _default_channel = None
